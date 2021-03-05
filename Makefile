@@ -1,5 +1,5 @@
 GCC = gcc
-CFLAGS = -Wall -g
+CFLAGS = -Wall -g -lpthread -lm -lrt
 
 MONITOR_DEP = monitor.c
 MONITOR_OBJ = $(MONITOR_DEP:.c=.o)

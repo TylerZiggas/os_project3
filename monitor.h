@@ -23,6 +23,7 @@
 
 #define FORMATTED_TIME_SIZE 50 
 #define FORMATTED_TIME_FORMAT "%H:%M:%S"
+
 #define THINKING 2
 #define HUNGRY 1
 #define EATING 0
@@ -35,8 +36,11 @@ struct SharedMemory {
 int smKey;
 int smID;
 struct SharedMemory* sm;
-sem_t mutex;
 
+int state[5];
+sem_t mutex;
+//int phil[5] = {0, 1, 2, 3, 4};
+sem_t S[5];
 
 void createFile(char*);
 void logOutput(char*, char*, ...);

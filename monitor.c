@@ -4,6 +4,10 @@ void setupTimer(int);
 void spawnChild(int, int);
 void signalHandler(int);
 void helpMenu();
+void test(int);
+void Pickup(int);
+void Putdown(int);
+void* philosopher(void*);
 
 bool flag = false;
 
@@ -106,19 +110,19 @@ int main (int argc, char *argv[]) {
 	sm->total = maxAll;
 	
 	int i;
-	pthread_t thread_id[maxAll];
+	pthread_t thread_id[5];
 	sem_init(&mutex, 0, 1);
-	int maxArray[maxAll];
-	for (i = 0; i < maxAll; i++) {
-		maxArray[i] = i;
+	for (i = 0; i < 5; i++) {
+		sem_init(&S[i], 0, 0);
+	}	
+
+	int phil[5] = {0, 1, 2, 3, 4};
+	for (i = 0; i < 5; i++) {
+		pthread_create(&thread_id[i], NULL, philosopher, &phil[i]);
+		printf("Philosopher %d is thinking\n", i+1);
 	}
 	
-	for (i = 0; i < maxAll; i++) {
-		pthread_create(&thread_id[i], NULL, philosopher, &maxArray[i]);
-		printf("Philosopher %d here\n", i+1);
-	}
-	
-	for (i = 0; i < maxAll; i++) {
+	for (i = 0; i < 5; i++) {
 		pthread_join(thread_id[i], NULL);
 	}
 	
@@ -139,16 +143,6 @@ int main (int argc, char *argv[]) {
 
 	removeSM(); // Removing the shared memory once children are done
 	return EXIT_SUCCESS;
-}
-
-void* philospher(void* num) {
-	while(1) {
-		int* i = num;
-		sleep(1);
-		take_fork(*i);
-		sleep(0);
-		put_fork(*i);
-	}
 }
 
 void setupTimer(const int t) { // Creation of the timer
@@ -221,3 +215,54 @@ void helpMenu() { // Help menu
 	printf("-o *name* to create a file where the information will be logged (default is logfile)\n");
 }
 
+//Monitor DP {
+//	int state[5];
+	//int phil[5] = { 0, 1, 2, 3, 4};
+	//sem_t mutex;
+	//sem_t S[5];
+	
+	void Pickup(int i) {
+		sem_wait(&mutex);
+		state[i] = HUNGRY;
+		
+		printf("Philosopher %d is hungry\n", i + 1);
+		test(i);
+
+		sem_post(&mutex);
+		sem_wait(&S[i]);
+		sleep(1);
+	}
+
+	void Putdown(int i) {
+		sem_wait(&mutex);
+                state[i] = THINKING;
+
+                printf("Philosopher %d putting fork %d and %d down\n", i + 1, ((i + 4) % 5) + 1, i + 1);
+		printf("Philosopher %d is thinking\n", i + 1);
+
+		test((i + 4) % 5);
+		test((i + 1) % 5);
+		
+                sem_post(&mutex);
+	}
+
+	void test(int i) {
+		if(state[(i + 4) % 5] != EATING && state[(i + 1) % 5] != EATING && state[i] == HUNGRY) {
+			state[i] = EATING;
+			sleep(2);
+			printf("Philosopher %d takes fork %d and %d\n", i + 1, ((i+4) % 5) + 1, i+1);
+			printf("Philosopher %d is eating\n", i + 1);
+			sem_post(&S[i]);
+		}
+	}
+
+	void* philosopher(void* num) {
+		while(1) {
+			int* i = num;
+			sleep(1);
+			Pickup(*i);
+			sleep(0);
+			Putdown(*i);
+		}
+	}
+//}
