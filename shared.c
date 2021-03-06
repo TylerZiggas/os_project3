@@ -66,27 +66,46 @@ void deleteSM() { // Deletion of memory
 	}
 }
 
-void semAllocate(bool set) {
-	if ((semKey = ftok("Makefile", 'p')) == -1) {
-		perror("Semaphore key error");
-		exit(EXIT_FAILURE);
-	}
-	if ((semId = semget(semKey, 1, (set ? IPC_CREAT : 0666)) == -1)) {
-		perror("Semaphore id error");
-		exit(EXIT_FAILURE);
-	}
-
-
+void* produce(void* args) {
+	int test = 5;
+//      sem_wait(empty);
+//      //      sem_wait(&mutex);
+        execl("./producer", test,NULL);
+//              //      sem_post(&mutex);
+//              //      sem_post(full);
 }
 
-void semRelease() {
-	if (semId > 0) {
-		if(semctl(semId, 0, IPC_RMID) == -1) {
-			perror("Semaphore release error");
-			exit(EXIT_FAILURE);
-		}
-	}
-}
+void* consume(void* args) {
+	int test2 = 5;
+              //      sem_wait(full);
+              //      sem_wait(&mutex);
+        execl("./consumer", test2, NULL);
+                      //      sem_post(&mutex);
+                      //      sem_post(empty);
+ }
+
+
+//void semAllocate(bool set) {
+//	if ((semKey = ftok("Makefile", 'p')) == -1) {
+//		perror("Semaphore key error");
+//		exit(EXIT_FAILURE);
+//	}
+//	if ((semId = semget(semKey, 1, (set ? IPC_EXCL | IPC_CREAT: 0)) == -1)) {
+//		perror("Semaphore id error");
+//		exit(EXIT_FAILURE);
+//	}
+//
+//
+//}
+
+//void semRelease() {
+//	if (semId > 0) {
+//		if(semctl(semId, 0, IPC_RMID) == -1) {
+//			perror("Semaphore release error");
+//			exit(EXIT_FAILURE);
+//		}
+//	}
+//}
 
 char* getFormattedTime() { // Creation of formatted time, mostly for log file
 	char* formattedTime = malloc(FORMATTED_TIME_SIZE * sizeof(char)); // allocate memory for it

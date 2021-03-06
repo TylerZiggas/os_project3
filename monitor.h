@@ -29,6 +29,8 @@
 #define EATING 0
 
 struct SharedMemory {
+	size_t maxPro;
+	size_t maxCon;
 	size_t total; // Total processes
 	pid_t pgid; // group pid
 };
@@ -39,6 +41,16 @@ struct SharedMemory* sm;
 
 key_t semKey;
 int semId;
+
+//
+void* produce(void*);
+void* consume(void*);
+//
+
+sem_t mutex;
+sem_t empty;
+sem_t full;
+
 
 void createFile(char*);
 void logOutput(char*, char*, ...);

@@ -94,7 +94,7 @@ int main (int argc, char *argv[]) {
 	
 
 	allocateSM(); // Allocate memory for the whole program
-	semAllocate(true);
+	//semAllocate(true);
 	setupTimer(timeSec); // Set up the timer
 	
 	if (maxProducers >= maxConsumers) {
@@ -108,8 +108,28 @@ int main (int argc, char *argv[]) {
 		maxAll = maxProducers + maxConsumers;
 	}
 
+	sm->maxPro = maxProducers;
+	sm->maxCon = maxConsumers;
 	sm->total = maxAll;
+	pthread_t thread_pro[maxProducers];
+	pthread_t thread_con[maxConsumers];
 	
+	int i;
+	for (i = 0; i < maxProducers; i++) {
+		pthread_create(&thread_pro[i], NULL, produce, NULL);
+	}
+	for (i = 0; i < maxConsumers; i++) {
+		pthread_create(&thread_con[i], NULL, consume, NULL);
+	}
+	for (i = 0; i < maxProducers; i++) {
+                pthread_join(i, NULL);
+        }
+
+        for (i = 0; i < maxConsumers; i++) {
+                pthread_join(i, NULL);
+        }
+
+//	sem_destroy(&mutex);	
 //	int childCounter = 0;
 //	while (i < items) { // Go through until we are passed the number of items
 //		if (childCounter < maxAll) { // Spawn children based on max allowed
@@ -124,7 +144,7 @@ int main (int argc, char *argv[]) {
 //	childCounter = 0;
 
 	removeSM(); // Removing the shared memory once children are done
-	semRelease();
+	//semRelease();
 	return EXIT_SUCCESS;
 }
 
