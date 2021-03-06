@@ -66,6 +66,28 @@ void deleteSM() { // Deletion of memory
 	}
 }
 
+void semAllocate(bool set) {
+	if ((semKey = ftok("Makefile", 'p')) == -1) {
+		perror("Semaphore key error");
+		exit(EXIT_FAILURE);
+	}
+	if ((semId = semget(semKey, 1, (set ? IPC_CREAT : 0666)) == -1)) {
+		perror("Semaphore id error");
+		exit(EXIT_FAILURE);
+	}
+
+
+}
+
+void semRelease() {
+	if (semId > 0) {
+		if(semctl(semId, 0, IPC_RMID) == -1) {
+			perror("Semaphore release error");
+			exit(EXIT_FAILURE);
+		}
+	}
+}
+
 char* getFormattedTime() { // Creation of formatted time, mostly for log file
 	char* formattedTime = malloc(FORMATTED_TIME_SIZE * sizeof(char)); // allocate memory for it
 	time_t now = time(NULL);

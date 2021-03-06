@@ -37,10 +37,8 @@ int smKey;
 int smID;
 struct SharedMemory* sm;
 
-int state[5];
-sem_t mutex;
-//int phil[5] = {0, 1, 2, 3, 4};
-sem_t S[5];
+key_t semKey;
+int semId;
 
 void createFile(char*);
 void logOutput(char*, char*, ...);
@@ -49,6 +47,8 @@ void attachSM();
 void releaseSM();
 void deleteSM();
 void removeSM();
+void semAllocate(bool);
+void semRelease();
 char* getFormattedTime();
 
 #endif
