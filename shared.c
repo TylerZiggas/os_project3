@@ -70,18 +70,22 @@ void* produce(void* args) {
 	int test = 5;
 //      sem_wait(empty);
 //      //      sem_wait(&mutex);
-        execl("./producer", test,NULL);
+//	printf("Got to producer");
+ //       execl("./producer", test,NULL);
 //              //      sem_post(&mutex);
 //              //      sem_post(full);
+	exit(EXIT_SUCCESS);
 }
 
 void* consume(void* args) {
 	int test2 = 5;
               //      sem_wait(full);
               //      sem_wait(&mutex);
-        execl("./consumer", test2, NULL);
+//        printf("Got to consumer\n");
+//	execl("./consumer", test2, NULL);
                       //      sem_post(&mutex);
                       //      sem_post(empty);
+	exit(EXIT_SUCCESS);
  }
 
 

@@ -4,10 +4,6 @@ void setupTimer(int);
 void spawnChild(int, int);
 void signalHandler(int);
 void helpMenu();
-void test(int);
-void Pickup(int);
-void Putdown(int);
-void* philosopher(void*);
 
 bool flag = false;
 
@@ -116,17 +112,21 @@ int main (int argc, char *argv[]) {
 	
 	int i;
 	for (i = 0; i < maxProducers; i++) {
+		printf("Produced producer %d\n", i);
 		pthread_create(&thread_pro[i], NULL, produce, NULL);
 	}
 	for (i = 0; i < maxConsumers; i++) {
+		printf("produced consumer\n");
 		pthread_create(&thread_con[i], NULL, consume, NULL);
 	}
 	for (i = 0; i < maxProducers; i++) {
-                pthread_join(i, NULL);
+        	printf("Producer joining\n");
+	        pthread_join(i, NULL);
         }
 
         for (i = 0; i < maxConsumers; i++) {
-                pthread_join(i, NULL);
+		printf("Consumer joining\n");	 
+	        pthread_join(i, NULL);
         }
 
 //	sem_destroy(&mutex);	
