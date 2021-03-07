@@ -66,27 +66,27 @@ void deleteSM() { // Deletion of memory
 	}
 }
 
-void* produce(void* args) {
-	int test = 5;
-//      sem_wait(empty);
-//      //      sem_wait(&mutex);
-//	printf("Got to producer");
- //       execl("./producer", test,NULL);
-//              //      sem_post(&mutex);
-//              //      sem_post(full);
-	exit(EXIT_SUCCESS);
+void spawnProducer(int producer, int i) {
+	pid_t pid = fork();
+	if (pid == 0) {
+		char id[256];
+		sprintf(id, "%d", producer);
+		printf("producer %d\n", producer);
+		execl("./producer", id, NULL);
+		exit(EXIT_SUCCESS);
+	}
 }
 
-void* consume(void* args) {
-	int test2 = 5;
-              //      sem_wait(full);
-              //      sem_wait(&mutex);
-//        printf("Got to consumer\n");
-//	execl("./consumer", test2, NULL);
-                      //      sem_post(&mutex);
-                      //      sem_post(empty);
-	exit(EXIT_SUCCESS);
- }
+void spawnConsumer(int consumer, int i) {
+	pid_t pid = fork();
+	if (pid == 0) {
+		char id[256];
+		sprintf(id, "%d", consumer);
+		printf("consumer %d\n", consumer);
+		execl("./consumer", id, NULL);	
+		exit(EXIT_SUCCESS);
+	}
+}
 
 
 //void semAllocate(bool set) {

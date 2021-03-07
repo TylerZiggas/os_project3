@@ -43,15 +43,15 @@ key_t semKey;
 int semId;
 
 //
-void* produce(void*);
-void* consume(void*);
-//
+//void spawnProducer(int, int);
+//void spawnConsumer(int, int);
 
 sem_t mutex;
 sem_t empty;
 sem_t full;
 
-
+void spawnProducer(int, int);
+void spawnConsumer(int, int);
 void createFile(char*);
 void logOutput(char*, char*, ...);
 void allocateSM();

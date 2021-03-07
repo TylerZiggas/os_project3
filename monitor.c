@@ -107,40 +107,28 @@ int main (int argc, char *argv[]) {
 	sm->maxPro = maxProducers;
 	sm->maxCon = maxConsumers;
 	sm->total = maxAll;
-	pthread_t thread_pro[maxProducers];
-	pthread_t thread_con[maxConsumers];
-	
-	int i;
-	for (i = 0; i < maxProducers; i++) {
-		printf("Produced producer %d\n", i);
-		pthread_create(&thread_pro[i], NULL, produce, NULL);
-	}
-	for (i = 0; i < maxConsumers; i++) {
-		printf("produced consumer\n");
-		pthread_create(&thread_con[i], NULL, consume, NULL);
-	}
-	for (i = 0; i < maxProducers; i++) {
-        	printf("Producer joining\n");
-	        pthread_join(i, NULL);
-        }
 
-        for (i = 0; i < maxConsumers; i++) {
-		printf("Consumer joining\n");	 
-	        pthread_join(i, NULL);
-        }
+	int producerCounter = 0;
+	int consumerCounter = 0;
+	int i = 0;
+	while (i < maxAll) { // Go through until we are passed the number of items
+		if (producerCounter < maxProducers) { // Spawn children based on max allowed
+			spawnProducer(producerCounter++, i);
+			i++;
+		} //else { // Else wait for children to finish and keep making more
+		//	while(wait(NULL) > 0);
+		//	producerCounter = 0;
+		//}
 
-//	sem_destroy(&mutex);	
-//	int childCounter = 0;
-//	while (i < items) { // Go through until we are passed the number of items
-//		if (childCounter < maxAll) { // Spawn children based on max allowed
-//			spawnChild(childCounter++, i);
-//			i++;
-//		} else { // Else wait for children to finish and keep making more
-//			while(wait(NULL) > 0);
-//			childCounter = 0;
-//		}
-//	}
-//	while(wait(NULL) > 0); // Wait for all to end before going to next depth
+		if (consumerCounter < maxConsumers) {
+			spawnConsumer(consumerCounter++, i);
+			i++;
+		} //else {
+		//	while(wait(NULL) > 0);
+		//	consumerCounter = 0;
+		//}
+	}
+	while(wait(NULL) > 0); // Wait for all to end before going to next depth
 //	childCounter = 0;
 
 	removeSM(); // Removing the shared memory once children are done
@@ -172,7 +160,6 @@ void setupTimer(const int t) { // Creation of the timer
 
 //void spawnChild(int childCounter, int i) { // Creation of children
 //	pid_t pid = fork(); // Fork child process
-//
 //	if (pid == -1) { // Check to see if child process was created
 //		perror("Failed to create a child process for bin_adder");
 //		exit(EXIT_FAILURE);
@@ -191,7 +178,7 @@ void setupTimer(const int t) { // Creation of the timer
 //		char id[256], bufferi[3];	// Creation of id through childcounter, and casting i and depth into chars
 //		sprintf(id, "%d", childCounter);	
 //		sprintf(bufferi, "%d", i);
-//		//execl("./bin_adder", "bin_adder", bufferi, bufferd, id, (char*) NULL); // Sending all information to bin_adder
+//		execl("./bin_adder", "bin_adder", bufferi, id, (char*) NULL); // Sending all information to bin_adder
 //		exit(EXIT_SUCCESS);
 //	}
 //}
