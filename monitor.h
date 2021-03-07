@@ -14,19 +14,16 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/wait.h>
+#include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
 #include <errno.h>
 #include <stdbool.h>
 #include <semaphore.h>
-#include <pthread.h>
+#include <fcntl.h>
 
 #define FORMATTED_TIME_SIZE 50 
 #define FORMATTED_TIME_FORMAT "%H:%M:%S"
-
-#define THINKING 2
-#define HUNGRY 1
-#define EATING 0
 
 struct SharedMemory {
 	size_t maxPro;
@@ -35,21 +32,15 @@ struct SharedMemory {
 	pid_t pgid; // group pid
 };
 
+char* logfilename;
+
 int smKey;
 int smID;
 struct SharedMemory* sm;
+sem_t mutex, empty, full;
 
-key_t semKey;
-int semId;
-
-//
-//void spawnProducer(int, int);
-//void spawnConsumer(int, int);
-
-sem_t mutex;
-sem_t empty;
-sem_t full;
-
+void produce(int);
+void consume(int);
 void spawnProducer(int, int);
 void spawnConsumer(int, int);
 void createFile(char*);

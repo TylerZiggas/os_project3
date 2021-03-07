@@ -5,25 +5,20 @@ void spawnChild(int, int);
 void signalHandler(int);
 void helpMenu();
 
-bool flag = false;
+//bool flag = false;
 
 int main (int argc, char *argv[]) {
-	int character, optargCount, maxProducers = 2, maxConsumers = 6,  timeSec = 100, items = 0; // Intiailize necessary variables
+	int character, optargCount, maxProducers = 2, maxConsumers = 6,  timeSec = 5; // Intiailize necessary variables
 	char* logfile;
-	bool allDigit = true;
+	bool allDigit = true, fileCreated = false;
 	signal(SIGINT, signalHandler);
 
 	while ((character = getopt(argc, argv, "o:p:c:t:h")) != -1) { // Set up command line parsing
 		switch (character) { 
 			case 'o': // Change the maxChildren at a time
-                                logfile = optarg;
+				logfile = optarg;
 				createFile(logfile);
-                                //} else {
-                                 //       errno = 22;
-                                  //      perror("-s requires an argument");
-                                   //     helpMenu();
-                                  //      return EXIT_FAILURE;
-                                //}
+				fileCreated = true;
                                 continue;
 			case 'p': // Change the maxChildren at a time
 				allDigit = true;
@@ -88,6 +83,10 @@ int main (int argc, char *argv[]) {
 		}
 	}
 	
+	if (!fileCreated) {
+		logfile = "logfile";
+		createFile(logfile);
+	}
 
 	allocateSM(); // Allocate memory for the whole program
 	//semAllocate(true);
@@ -103,7 +102,8 @@ int main (int argc, char *argv[]) {
 		maxConsumers = 6;
 		maxAll = maxProducers + maxConsumers;
 	}
-
+	printf("%s\n", logfile);
+	logfilename = logfile;
 	sm->maxPro = maxProducers;
 	sm->maxCon = maxConsumers;
 	sm->total = maxAll;
@@ -111,8 +111,12 @@ int main (int argc, char *argv[]) {
 	int producerCounter = 0;
 	int consumerCounter = 0;
 	int i = 0;
+	sem_t *mutex = sem_open("mutex", O_CREAT, 0600, 0);
+	sem_t *empty = sem_open("empty", O_CREAT, 0600, 0);
+	sem_t *full = sem_open("full", O_CREAT, 0600, 0);
 	while (i < maxAll) { // Go through until we are passed the number of items
 		if (producerCounter < maxProducers) { // Spawn children based on max allowed
+			//printf("Spawning producer...");
 			spawnProducer(producerCounter++, i);
 			i++;
 		} //else { // Else wait for children to finish and keep making more
@@ -121,6 +125,7 @@ int main (int argc, char *argv[]) {
 		//}
 
 		if (consumerCounter < maxConsumers) {
+			//printf("Spawning consumer...");
 			spawnConsumer(consumerCounter++, i);
 			i++;
 		} //else {
@@ -132,6 +137,13 @@ int main (int argc, char *argv[]) {
 //	childCounter = 0;
 
 	removeSM(); // Removing the shared memory once children are done
+	sem_close(mutex);
+	sem_close(empty);
+	sem_close(full);
+	sem_unlink("full");
+	sem_unlink("empty");
+	sem_unlink("mutex");
+	
 	//semRelease();
 	return EXIT_SUCCESS;
 }
@@ -158,41 +170,15 @@ void setupTimer(const int t) { // Creation of the timer
 	}
 }
 
-//void spawnChild(int childCounter, int i) { // Creation of children
-//	pid_t pid = fork(); // Fork child process
-//	if (pid == -1) { // Check to see if child process was created
-//		perror("Failed to create a child process for bin_adder");
-//		exit(EXIT_FAILURE);
-//	}
-//
-//	if (pid == 0) { // If it was created successfully
-//		flag = true;
-//		
-//		if (childCounter == 0) { // Set first as the group pid
-//			sm->pgid = getpid();
-//		}
-//
-//		setpgid(0, sm->pgid);
-//		flag = false;
-//		
-//		char id[256], bufferi[3];	// Creation of id through childcounter, and casting i and depth into chars
-//		sprintf(id, "%d", childCounter);	
-//		sprintf(bufferi, "%d", i);
-//		execl("./bin_adder", "bin_adder", bufferi, id, (char*) NULL); // Sending all information to bin_adder
-//		exit(EXIT_SUCCESS);
-//	}
-//}
-
 void signalHandler(int s) { // Signal handler for master
-	if (flag) { // In case flag is currently working
-		sleep(1);
-	}
-
 	killpg(sm->pgid, s == SIGALRM ? SIGUSR1 : SIGTERM);
 
 	while (wait(NULL) > 0); // Wait for all child processes to finish
 
-	printf("Parent exiting...\n");	
+	printf("Monitor exiting...\n");	
+	sem_destroy(&mutex);
+	sem_destroy(&empty);
+	sem_destroy(&full);
 	removeSM(); // Deallocate and destroy shared memory
 	exit(EXIT_SUCCESS);
 }

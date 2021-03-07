@@ -66,50 +66,98 @@ void deleteSM() { // Deletion of memory
 	}
 }
 
+
+//Monitor block
+
+int counter = 0;
+
+void produce(int producer) {
+	printf("producer produce function%d\n", producer);
+	//sem_t *mutex = sem_open("mutex", 1);
+	//sem_t *empty = sem_open("empty" , 1);
+	//sem_t *full = sem_open("full" , 0);
+	//if (counter == sm->maxPro-1) {
+	//	printf("Producer waiting on full\n");
+	//	sem_wait(full);
+	//	sem_wait(mutex);
+	//}
+	char id[256];
+	sprintf(id, "%d", producer);
+	execl("./producer", id, NULL);		
+	//counter++;
+
+	//if (counter == 1) {
+	//	sem_post(mutex);
+	//	sem_post(empty);		
+	//}
+	//sem_close(mutex);
+	//sem_close(empty);
+	//sem_close(full);
+}
+
+void consume(int consumer) {
+	printf("consumer consume function%d\n", consumer);
+        //sem_t *mutex = sem_open("mutex", 1);
+        //sem_t *empty = sem_open("empty" , 1);
+        //sem_t *full = sem_open("full" , 0);
+	//if (counter == 0) {
+	//	printf("Consumer waiting on empty\n");
+	//	sem_wait(empty);
+	//	sem_wait(mutex);
+	//}
+
+	char id[256];
+	sprintf(id, "%d", consumer);
+	execl("./consumer", id, NULL);	
+	//counter--;
+
+	//if (counter == sm->maxPro-1) {
+	//	sem_post(mutex);
+	//	sem_post(full);
+	//}
+	//sem_close(mutex);
+	//sem_close(empty);
+	//sem_close(full);
+}
+
 void spawnProducer(int producer, int i) {
 	pid_t pid = fork();
+	if (i == 0) {
+		sm->pgid = getpid();
+	}
+ 	setpgid(0, sm->pgid);
 	if (pid == 0) {
-		char id[256];
-		sprintf(id, "%d", producer);
-		printf("producer %d\n", producer);
-		execl("./producer", id, NULL);
-		exit(EXIT_SUCCESS);
+		while (true) {
+			//printf("Producer %d here", i);
+			produce(producer);
+		}
+		//char id[256];
+		//sprintf(id, "%d", producer);
+		//printf("producer %d\n", producer);
+		//execl("./producer", id, NULL);
+		//exit(EXIT_SUCCESS);
 	}
 }
 
 void spawnConsumer(int consumer, int i) {
 	pid_t pid = fork();
+	if (i == 0) {
+		sm->pgid = getpid();
+	}
+	setpgid(0, sm->pgid);
 	if (pid == 0) {
-		char id[256];
-		sprintf(id, "%d", consumer);
-		printf("consumer %d\n", consumer);
-		execl("./consumer", id, NULL);	
-		exit(EXIT_SUCCESS);
+		while (true) {
+			//printf("Consumer %d here", i);
+			consume(consumer);
+		}
+		//char id[256];
+		//sprintf(id, "%d", consumer);
+		//printf("consumer %d\n", consumer);
+		//execl("./consumer", id, NULL);	
+		//exit(EXIT_SUCCESS);
 	}
 }
-
-
-//void semAllocate(bool set) {
-//	if ((semKey = ftok("Makefile", 'p')) == -1) {
-//		perror("Semaphore key error");
-//		exit(EXIT_FAILURE);
-//	}
-//	if ((semId = semget(semKey, 1, (set ? IPC_EXCL | IPC_CREAT: 0)) == -1)) {
-//		perror("Semaphore id error");
-//		exit(EXIT_FAILURE);
-//	}
-//
-//
-//}
-
-//void semRelease() {
-//	if (semId > 0) {
-//		if(semctl(semId, 0, IPC_RMID) == -1) {
-//			perror("Semaphore release error");
-//			exit(EXIT_FAILURE);
-//		}
-//	}
-//}
+//End of Monitor block
 
 char* getFormattedTime() { // Creation of formatted time, mostly for log file
 	char* formattedTime = malloc(FORMATTED_TIME_SIZE * sizeof(char)); // allocate memory for it
