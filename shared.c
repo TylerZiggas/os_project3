@@ -72,19 +72,25 @@ void deleteSM() { // Deletion of memory
 int counter = 0;
 
 void produce(int producer) {
-	printf("producer produce function%d\n", producer);
+	//signal(SIGTERM, signalHandler); // Set up signals 
+	//signal(SIGUSR1, signalHandler);
+	//printf("producer produce function%d\n", producer);
 	sem_t *mutex = sem_open("mutex", 1);
 	sem_t *empty = sem_open("empty" , 1);
 	sem_t *full = sem_open("full" , 0);
 	if (counter == sm->maxPro) {
-		printf("Producer waiting on full\n");
+		//printf("Producer waiting on full\n");
 		sem_wait(empty);
 		sem_wait(mutex);
 	}
+	
 	char id[256];
 	sprintf(id, "%d", producer);
-	execl("./producer", id, NULL);		
+	//execl("./producer", id, NULL);		
+	printf("Producer %d\n", producer);
 	counter++;
+	printf("%d\n", counter);
+	
 	if (counter == 1) {
 		sem_post(mutex);
 		sem_post(full);		
@@ -95,19 +101,24 @@ void produce(int producer) {
 }
 
 void consume(int consumer) {
-	printf("consumer consume function%d\n", consumer);
+	//signal(SIGTERM, signalHandler); // Set up signals 
+	//signal(SIGUSR1, signalHandler);
+	//printf("consumer consume function%d\n", consumer);
         sem_t *mutex = sem_open("mutex", 1);
         sem_t *empty = sem_open("empty" , 1);
         sem_t *full = sem_open("full" , 0);
 	if (counter == 0) {
-		printf("Consumer waiting on empty\n");
+		//printf("Consumer waiting on empty\n");
 		sem_wait(full);
+		//printf("Consumer past full\n");
 		sem_wait(mutex);
+		printf("Consumer past full and mutex\n");
 	}
 
 	char id[256];
 	sprintf(id, "%d", consumer);
-	execl("./consumer", id, NULL);	
+	//execl("./consumer", id, NULL);	
+	printf("Consumer %d\n", consumer);
 	counter--;
 
 	if (counter == sm->maxPro-1) {
@@ -126,10 +137,11 @@ void spawnProducer(int producer, int i) {
 	}
  	setpgid(0, sm->pgid);
 	if (pid == 0) {
-		while (true) {
+		//while (true) {
 			//printf("Producer %d here", i);
 			produce(producer);
-		}
+			exit(EXIT_SUCCESS);
+		//}
 		//char id[256];
 		//sprintf(id, "%d", producer);
 		//printf("producer %d\n", producer);
@@ -145,10 +157,11 @@ void spawnConsumer(int consumer, int i) {
 	}
 	setpgid(0, sm->pgid);
 	if (pid == 0) {
-		while (true) {
+		//while (true) {
 			//printf("Consumer %d here", i);
 			consume(consumer);
-		}
+			exit(EXIT_SUCCESS);
+		//}
 		//char id[256];
 		//sprintf(id, "%d", consumer);
 		//printf("consumer %d\n", consumer);

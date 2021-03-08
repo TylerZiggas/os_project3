@@ -114,6 +114,9 @@ int main (int argc, char *argv[]) {
 	sem_t *mutex = sem_open("mutex", O_CREAT, 0600, 0);
 	sem_t *empty = sem_open("empty", O_CREAT, 0600, 0);
 	sem_t *full = sem_open("full", O_CREAT, 0600, 0);
+	sem_close(mutex);
+	sem_close(empty);
+	sem_close(full);
 	while (i < maxAll) { // Go through until we are passed the number of items
 		if (producerCounter < maxProducers) { // Spawn children based on max allowed
 			//printf("Spawning producer...");
@@ -137,9 +140,6 @@ int main (int argc, char *argv[]) {
 //	childCounter = 0;
 
 	removeSM(); // Removing the shared memory once children are done
-	sem_close(mutex);
-	sem_close(empty);
-	sem_close(full);
 	sem_unlink("full");
 	sem_unlink("empty");
 	sem_unlink("mutex");
@@ -176,9 +176,9 @@ void signalHandler(int s) { // Signal handler for master
 	while (wait(NULL) > 0); // Wait for all child processes to finish
 
 	printf("Monitor exiting...\n");	
-	sem_destroy(&mutex);
-	sem_destroy(&empty);
-	sem_destroy(&full);
+	sem_unlink("mutex");
+	sem_unlink("empty");
+	sem_unlink("full");
 	removeSM(); // Deallocate and destroy shared memory
 	exit(EXIT_SUCCESS);
 }
