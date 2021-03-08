@@ -66,14 +66,53 @@ void deleteSM() { // Deletion of memory
 	}
 }
 
+char* getFormattedTime() { // Creation of formatted time, mostly for log file
+        char* formattedTime = malloc(FORMATTED_TIME_SIZE * sizeof(char)); // allocate memory for it
+        time_t now = time(NULL);
+        strftime(formattedTime, FORMATTED_TIME_SIZE, FORMATTED_TIME_FORMAT, localtime(&now)); // format time we just recieved
+        return formattedTime;
+}
 
+void sigact(int signum, void handler(int)) {
+	struct sigaction sa;
+	if (sigemptyset(&sa.sa_mask) == -1) {
+		perror("Sig set error");
+		exit(EXIT_FAILURE);
+	}
+	sa.sa_handler = handler;
+	sa.sa_flags = 0;
+	if (sigaction(signum, &sa, NULL) == -1) {
+		perror("Sigaction error");
+		exit(EXIT_FAILURE);
+	}
+}
+
+void signalHandler(int s) {
+	sem_unlink("mutex");
+	sem_unlink("empty");
+	sem_unlink("full");
+	if (s == SIGTERM || s == SIGUSR1) {
+		printf("Child exiting...\n");
+		exit(EXIT_FAILURE);
+	}
+
+	killpg(sm->pgid, s == SIGALRM ? SIGUSR1 : SIGTERM);
+	while (wait(NULL) > 0);
+	sleep(1);
+	removeSM();
+	//sem_unlink("mutex");
+	//sem_unlink("empty");
+	//sem_unlink("full");
+	printf("Monitor exiting...\n");
+	exit(EXIT_SUCCESS);
+}
 //Monitor block
 
 int counter = 0;
 
 void produce(int producer) {
-	//signal(SIGTERM, signalHandler); // Set up signals 
-	//signal(SIGUSR1, signalHandler);
+	sigact(SIGTERM, signalHandler); // Set up signals 
+	sigact(SIGUSR1, signalHandler);
 	//printf("producer produce function%d\n", producer);
 	sem_t *mutex = sem_open("mutex", 1);
 	sem_t *empty = sem_open("empty" , 1);
@@ -101,8 +140,8 @@ void produce(int producer) {
 }
 
 void consume(int consumer) {
-	//signal(SIGTERM, signalHandler); // Set up signals 
-	//signal(SIGUSR1, signalHandler);
+	sigact(SIGTERM, signalHandler); // Set up signals 
+	sigact(SIGUSR1, signalHandler);
 	//printf("consumer consume function%d\n", consumer);
         sem_t *mutex = sem_open("mutex", 1);
         sem_t *empty = sem_open("empty" , 1);
@@ -152,10 +191,10 @@ void spawnProducer(int producer, int i) {
 
 void spawnConsumer(int consumer, int i) {
 	pid_t pid = fork();
-	if (i == 0) {
-		sm->pgid = getpid();
-	}
-	setpgid(0, sm->pgid);
+	//if (i == 0) {
+	//	sm->pgid = getpid();
+	//}
+	//setpgid(0, sm->pgid);
 	if (pid == 0) {
 		//while (true) {
 			//printf("Consumer %d here", i);
@@ -170,10 +209,3 @@ void spawnConsumer(int consumer, int i) {
 	}
 }
 //End of Monitor block
-
-char* getFormattedTime() { // Creation of formatted time, mostly for log file
-	char* formattedTime = malloc(FORMATTED_TIME_SIZE * sizeof(char)); // allocate memory for it
-	time_t now = time(NULL);
-	strftime(formattedTime, FORMATTED_TIME_SIZE, FORMATTED_TIME_FORMAT, localtime(&now)); // format time we just recieved
-	return formattedTime;
-}

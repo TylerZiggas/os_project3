@@ -1,10 +1,10 @@
 #include "monitor.h"
 
-void signalHandler(int);
+//void signalHandler(int);
 
 int main (int argc, char *argv[]) {
-	signal(SIGTERM, signalHandler);
-	signal(SIGUSR1, signalHandler);
+	sigact(SIGTERM, signalHandler);
+	sigact(SIGUSR1, signalHandler);
 	attachSM();
 	// grab item
 	// log
@@ -14,9 +14,9 @@ int main (int argc, char *argv[]) {
 	return 0;
 }
 
-void signalHandler(int s) { // Catches signal for ^C or Timeout
-	if (s == SIGTERM || s == SIGUSR1) {
-		printf("Consumer exiting... 2\n");
-		exit(EXIT_FAILURE);
-	}
-}
+//void signalHandler(int s) { // Catches signal for ^C or Timeout
+//	if (s == SIGTERM || s == SIGUSR1) {
+//		printf("Consumer exiting... 2\n");
+//		exit(EXIT_FAILURE);
+//	}
+//}

@@ -29,6 +29,7 @@ struct SharedMemory {
 	size_t maxPro;
 	size_t maxCon;
 	size_t total; // Total processes
+	char* logfile[50];
 	pid_t pgid; // group pid
 };
 
@@ -50,8 +51,8 @@ void attachSM();
 void releaseSM();
 void deleteSM();
 void removeSM();
-void semAllocate(bool);
-void semRelease();
+void sigact(int, void(int));
+void signalHandler(int);
 char* getFormattedTime();
 
 #endif

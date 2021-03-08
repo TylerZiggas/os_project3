@@ -2,7 +2,7 @@
 
 void setupTimer(int);
 void spawnChild(int, int);
-void signalHandler(int);
+//void signalHandler(int);
 void helpMenu();
 
 //bool flag = false;
@@ -11,7 +11,8 @@ int main (int argc, char *argv[]) {
 	int character, optargCount, maxProducers = 2, maxConsumers = 6,  timeSec = 5; // Intiailize necessary variables
 	char* logfile;
 	bool allDigit = true, fileCreated = false;
-	signal(SIGINT, signalHandler);
+	//signal(SIGINT, signalHandler);
+	sigact(SIGINT, signalHandler);
 
 	while ((character = getopt(argc, argv, "o:p:c:t:h")) != -1) { // Set up command line parsing
 		switch (character) { 
@@ -103,7 +104,9 @@ int main (int argc, char *argv[]) {
 		maxAll = maxProducers + maxConsumers;
 	}
 	printf("%s\n", logfile);
-	logfilename = logfile;
+	//const char* newlogfile = logfile;
+	//*sm->logfile = *newlogfile;
+	//printf("%s\n <- here goes\n", sm->logfile);
 	sm->maxPro = maxProducers;
 	sm->maxCon = maxConsumers;
 	sm->total = maxAll;
@@ -149,14 +152,15 @@ int main (int argc, char *argv[]) {
 }
 
 void setupTimer(const int t) { // Creation of the timer
-	struct sigaction action;
-	memset(&action, 0, sizeof(action));
-	action.sa_handler = signalHandler;
+	sigact(SIGALRM, signalHandler);
+	//struct sigaction action;
+	//memset(&action, 0, sizeof(action));
+	//action.sa_handler = signalHandler;
 
-	if (sigaction(SIGALRM, &action, NULL) != 0) { // In case of failed signal creation
-		perror("Failed to set signal action for timer");
-		exit(EXIT_FAILURE);	
-	}
+	//if (sigaction(SIGALRM, &action, NULL) != 0) { // In case of failed signal creation
+	//	perror("Failed to set signal action for timer");
+	//	exit(EXIT_FAILURE);	
+	//}
 
 	struct itimerval timer;
 	timer.it_value.tv_sec = t;
@@ -170,18 +174,18 @@ void setupTimer(const int t) { // Creation of the timer
 	}
 }
 
-void signalHandler(int s) { // Signal handler for master
-	killpg(sm->pgid, s == SIGALRM ? SIGUSR1 : SIGTERM);
-
-	while (wait(NULL) > 0); // Wait for all child processes to finish
-
-	printf("Monitor exiting...\n");	
-	sem_unlink("mutex");
-	sem_unlink("empty");
-	sem_unlink("full");
-	removeSM(); // Deallocate and destroy shared memory
-	exit(EXIT_SUCCESS);
-}
+//void signalHandler(int s) { // Signal handler for master
+//	killpg(sm->pgid, s == SIGALRM ? SIGUSR1 : SIGTERM);
+//
+//	while (wait(NULL) > 0); // Wait for all child processes to finish
+//
+//	printf("Monitor exiting...\n");	
+//	sem_unlink("mutex");
+//	sem_unlink("empty");
+//	sem_unlink("full");
+//	removeSM(); // Deallocate and destroy shared memory
+//	exit(EXIT_SUCCESS);
+//}
 
 void helpMenu() { // Help menu
 	printf("This program taks a number of producers and consumers and ends at whatever the user wishes by setting the time.\n");
