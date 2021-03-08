@@ -108,7 +108,7 @@ void signalHandler(int s) {
 }
 //Monitor block
 
-int counter = 0;
+//int monitorCounter = 0;
 
 void produce(int producer) {
 	sigact(SIGTERM, signalHandler); // Set up signals 
@@ -117,7 +117,8 @@ void produce(int producer) {
 	sem_t *mutex = sem_open("mutex", 1);
 	sem_t *empty = sem_open("empty" , 1);
 	sem_t *full = sem_open("full" , 0);
-	if (counter == sm->maxPro) {
+	//sm->monitorCounter++;
+	if (sm->monitorCounter == sm->maxPro) {
 		//printf("Producer waiting on full\n");
 		sem_wait(empty);
 		sem_wait(mutex);
@@ -125,15 +126,15 @@ void produce(int producer) {
 	
 	char id[256];
 	sprintf(id, "%d", producer);
-	//execl("./producer", id, NULL);		
-	printf("Producer %d\n", producer);
-	counter++;
-	printf("%d\n", counter);
+	execl("./producer", id, NULL);		
+	//printf("Producer %d\n", producer);
+	//monitorCounter++;
+	//printf("%d\n", counter);
 	
-	if (counter == 1) {
-		sem_post(mutex);
-		sem_post(full);		
-	}
+	//if (monitorCounter == 1) {
+	//	sem_post(mutex);
+	//	sem_post(full);		
+	//}
 	//sem_close(mutex);
 	//sem_close(empty);
 	//sem_close(full);
@@ -146,7 +147,8 @@ void consume(int consumer) {
         sem_t *mutex = sem_open("mutex", 1);
         sem_t *empty = sem_open("empty" , 1);
         sem_t *full = sem_open("full" , 0);
-	if (counter == 0) {
+	//sm->monitorCounter--;
+	if (sm->monitorCounter == 0) {
 		//printf("Consumer waiting on empty\n");
 		sem_wait(full);
 		//printf("Consumer past full\n");
@@ -156,14 +158,14 @@ void consume(int consumer) {
 
 	char id[256];
 	sprintf(id, "%d", consumer);
-	//execl("./consumer", id, NULL);	
-	printf("Consumer %d\n", consumer);
-	counter--;
+	execl("./consumer", id, NULL);	
+	//printf("Consumer %d\n", consumer);
+	//monitorCounter--;
 
-	if (counter == sm->maxPro-1) {
-		sem_post(mutex);
-		sem_post(empty);
-	}
+	//if (monitorCounter == sm->maxPro-1) {
+	//	sem_post(mutex);
+	//	sem_post(empty);
+	//}
 	//sem_close(mutex);
 	//sem_close(empty);
 	//sem_close(full);

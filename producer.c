@@ -3,6 +3,9 @@
 //void signalHandler(int);
 
 int main(int argc, char *argv[]) {
+	sem_t *mutex = sem_open("mutex", 1);
+	sem_t *empty = sem_open("empty", 1);
+	sem_t *full = sem_open("full", 0);
 	sigact(SIGTERM, signalHandler); // Set up signals 
 	sigact(SIGUSR1, signalHandler);
 	attachSM();
@@ -13,7 +16,14 @@ int main(int argc, char *argv[]) {
 	//logOutput(sm->logfile, "Time%s | Producer created %d", getFormattedTime(), i);
 	// store 
 	sleep((rand() % (5 - 1 + 1)) + 1);
-	printf("Producer produced %d\n", i);
+	printf("Producer produced item :%d\n", i);
+	sm->monitorCounter++;
+	if (sm->monitorCounter == 1) {
+		sem_post(mutex);
+		sem_post(full);
+	}
+	sm->producerCounter--;
+	sm->monitorCounter++;
 	return 0;
 }
 

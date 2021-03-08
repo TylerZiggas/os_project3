@@ -30,6 +30,9 @@ struct SharedMemory {
 	size_t maxCon;
 	size_t total; // Total processes
 	char* logfile[50];
+	int producerCounter;
+	int consumerCounter;
+	int monitorCounter;
 	pid_t pgid; // group pid
 };
 

@@ -111,8 +111,9 @@ int main (int argc, char *argv[]) {
 	sm->maxCon = maxConsumers;
 	sm->total = maxAll;
 
-	int producerCounter = 0;
-	int consumerCounter = 0;
+	sm->producerCounter = 0;
+	sm->consumerCounter = 0;
+	sm->monitorCounter = 0;
 	int i = 0;
 	sem_t *mutex = sem_open("mutex", O_CREAT, 0600, 0);
 	sem_t *empty = sem_open("empty", O_CREAT, 0600, 0);
@@ -120,23 +121,26 @@ int main (int argc, char *argv[]) {
 	sem_close(mutex);
 	sem_close(empty);
 	sem_close(full);
-	while (i < maxAll) { // Go through until we are passed the number of items
-		if (producerCounter < maxProducers) { // Spawn children based on max allowed
-			//printf("Spawning producer...");
-			spawnProducer(producerCounter++, i);
+	while (true) { // Go through until we are passed the number of items
+		if (sm->producerCounter < maxProducers) { // Spawn children based on max allowed
+			//printf("Spawning producer...%d\n", sm->producerCounter);
+			spawnProducer(sm->producerCounter++, i);
 			i++;
 		} //else { // Else wait for children to finish and keep making more
 		//	while(wait(NULL) > 0);
 		//	producerCounter = 0;
 		//}
 
-		if (consumerCounter < maxConsumers) {
-			//printf("Spawning consumer...");
-			spawnConsumer(consumerCounter++, i);
+		if (sm->consumerCounter < maxConsumers) {
+			//printf("Spawning consumer...%d\n", sm->consumerCounter);
+			spawnConsumer(sm->consumerCounter++, i);
 			i++;
 		} //else {
 		//	while(wait(NULL) > 0);
 		//	consumerCounter = 0;
+		//}
+		//if (sm->producerCounter + sm->consumerCounter == maxAll) {
+		//	wait(NULL);
 		//}
 	}
 	while(wait(NULL) > 0); // Wait for all to end before going to next depth
