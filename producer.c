@@ -8,7 +8,7 @@ int main(int argc, char *argv[]) {
 	attachSM();
 	srand(time(NULL));
 	int i = (rand() % 300);
-	printf("%s\n", logfilename);
+	//printf("%s\n", logfilename);
 	//logOutput(logfilename, "Time%s | Producer created %d", getFormattedTime(), i);
 	// store 
 	sleep((rand() % (5 - 1 + 1)) + 1);

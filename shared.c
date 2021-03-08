@@ -73,23 +73,22 @@ int counter = 0;
 
 void produce(int producer) {
 	printf("producer produce function%d\n", producer);
-	//sem_t *mutex = sem_open("mutex", 1);
-	//sem_t *empty = sem_open("empty" , 1);
-	//sem_t *full = sem_open("full" , 0);
-	//if (counter == sm->maxPro-1) {
-	//	printf("Producer waiting on full\n");
-	//	sem_wait(full);
-	//	sem_wait(mutex);
-	//}
+	sem_t *mutex = sem_open("mutex", 1);
+	sem_t *empty = sem_open("empty" , 1);
+	sem_t *full = sem_open("full" , 0);
+	if (counter == sm->maxPro) {
+		printf("Producer waiting on full\n");
+		sem_wait(empty);
+		sem_wait(mutex);
+	}
 	char id[256];
 	sprintf(id, "%d", producer);
 	execl("./producer", id, NULL);		
-	//counter++;
-
-	//if (counter == 1) {
-	//	sem_post(mutex);
-	//	sem_post(empty);		
-	//}
+	counter++;
+	if (counter == 1) {
+		sem_post(mutex);
+		sem_post(full);		
+	}
 	//sem_close(mutex);
 	//sem_close(empty);
 	//sem_close(full);
@@ -97,24 +96,24 @@ void produce(int producer) {
 
 void consume(int consumer) {
 	printf("consumer consume function%d\n", consumer);
-        //sem_t *mutex = sem_open("mutex", 1);
-        //sem_t *empty = sem_open("empty" , 1);
-        //sem_t *full = sem_open("full" , 0);
-	//if (counter == 0) {
-	//	printf("Consumer waiting on empty\n");
-	//	sem_wait(empty);
-	//	sem_wait(mutex);
-	//}
+        sem_t *mutex = sem_open("mutex", 1);
+        sem_t *empty = sem_open("empty" , 1);
+        sem_t *full = sem_open("full" , 0);
+	if (counter == 0) {
+		printf("Consumer waiting on empty\n");
+		sem_wait(full);
+		sem_wait(mutex);
+	}
 
 	char id[256];
 	sprintf(id, "%d", consumer);
 	execl("./consumer", id, NULL);	
-	//counter--;
+	counter--;
 
-	//if (counter == sm->maxPro-1) {
-	//	sem_post(mutex);
-	//	sem_post(full);
-	//}
+	if (counter == sm->maxPro-1) {
+		sem_post(mutex);
+		sem_post(empty);
+	}
 	//sem_close(mutex);
 	//sem_close(empty);
 	//sem_close(full);
