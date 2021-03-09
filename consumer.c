@@ -13,13 +13,16 @@ int main (int argc, char *argv[]) {
 	// log
 	// delete item
 	sleep((rand() % (5 - 1 + 1)) + 1);
-	printf("Consumer consumed item: \n");
+	int i = sm->item; 
+	printf("Consumer consumed item: %d\n", sm->item);
+
+	sm->monitorCounter--;
 	if (sm->monitorCounter == sm->maxPro-1) {
 		sem_post(mutex);
 		sem_post(empty);
 	}
 	sm->consumerCounter--;
-	sm->monitorCounter--;
+	//sm->monitorCounter--;
 	return 0;
 }
 

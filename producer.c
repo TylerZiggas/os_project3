@@ -17,13 +17,14 @@ int main(int argc, char *argv[]) {
 	// store 
 	sleep((rand() % (5 - 1 + 1)) + 1);
 	printf("Producer produced item :%d\n", i);
+	sm->item = i;
 	sm->monitorCounter++;
 	if (sm->monitorCounter == 1) {
 		sem_post(mutex);
 		sem_post(full);
 	}
 	sm->producerCounter--;
-	sm->monitorCounter++;
+	//sm->monitorCounter++;
 	return 0;
 }
 

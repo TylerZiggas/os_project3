@@ -123,7 +123,7 @@ int main (int argc, char *argv[]) {
 	sem_close(full);
 	while (true) { // Go through until we are passed the number of items
 		if (sm->producerCounter < maxProducers) { // Spawn children based on max allowed
-			//printf("Spawning producer...%d\n", sm->producerCounter);
+			printf("Spawning producer...%d\n", sm->producerCounter);
 			spawnProducer(sm->producerCounter++, i);
 			i++;
 		} //else { // Else wait for children to finish and keep making more
@@ -132,16 +132,18 @@ int main (int argc, char *argv[]) {
 		//}
 
 		if (sm->consumerCounter < maxConsumers) {
-			//printf("Spawning consumer...%d\n", sm->consumerCounter);
+			printf("Spawning consumer...%d\n", sm->consumerCounter);
 			spawnConsumer(sm->consumerCounter++, i);
 			i++;
-		} //else {
+		} else {
 		//	while(wait(NULL) > 0);
 		//	consumerCounter = 0;
 		//}
 		//if (sm->producerCounter + sm->consumerCounter == maxAll) {
-		//	wait(NULL);
-		//}
+			printf("Waiting\n");
+			wait(NULL);
+			printf("Done waiting\n");
+		}
 	}
 	while(wait(NULL) > 0); // Wait for all to end before going to next depth
 //	childCounter = 0;

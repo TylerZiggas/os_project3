@@ -33,6 +33,7 @@ struct SharedMemory {
 	int producerCounter;
 	int consumerCounter;
 	int monitorCounter;
+	int item;
 	pid_t pgid; // group pid
 };
 
