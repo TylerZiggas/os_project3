@@ -13,7 +13,8 @@ int main (int argc, char *argv[]) {
 	// log
 	// delete item
 	sleep((rand() % (10 - 1 + 1)) + 1);
-	int i = sm->item; 
+	int i = sm->item;
+	logOutput(sm->logfile, "Time %s | Consumer removed %d\n", getFormattedTime(), i); 
 	printf("Consumer consumed item: %d\n", sm->item);
 
 	sm->monitorCounter--;

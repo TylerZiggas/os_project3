@@ -104,9 +104,9 @@ int main (int argc, char *argv[]) {
 		maxAll = maxProducers + maxConsumers;
 	}
 	
-	printf("%s\n", logfile);
-	const char newlogfile = logfile;
-	strcpy(sm->logfile, newlogfile);
+	//printf("%s\n", sm->logfile);
+	//char* newlogfile[10];
+	strcpy(sm->logfile, logfile);
 	printf("%s <- here goes\n", sm->logfile);
 	
 	sm->maxPro = maxProducers;

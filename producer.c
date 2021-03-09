@@ -13,10 +13,10 @@ int main(int argc, char *argv[]) {
 	int i = (rand() % 300);
 	//printf("%s\n", logfilename);
 	//printf("%s <- should be here", sm->logfile);
-	//logOutput(sm->logfile, "Time%s | Producer created %d", getFormattedTime(), i);
+	logOutput(sm->logfile, "Time %s | Producer created item %d\n", getFormattedTime(), i);
 	// store 
 	sleep((rand() % (5 - 1 + 1)) + 1);
-	printf("Producer produced item :%d\n", i);
+	printf("Producer produced item: %d\n", i);
 	sm->item = i;
 	//itemSize++;
 	//printf("This is the amount of items produced: %d\n", itemSize);

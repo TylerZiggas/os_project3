@@ -29,7 +29,7 @@ struct SharedMemory {
 	size_t maxPro;
 	size_t maxCon;
 	size_t total; // Total processes
-	char logfile[50];
+	char logfile[20];
 	int producerCounter;
 	int consumerCounter;
 	int monitorCounter;
