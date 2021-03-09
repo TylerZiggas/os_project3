@@ -3,27 +3,19 @@
 //void signalHandler(int);
 
 int main (int argc, char *argv[]) {
-	sem_t *mutex = sem_open("mutex", 0);
+	sem_t *mutex = sem_open("mutex", 0); // Open necessary semaphores for use here
         sem_t *empty = sem_open("empty", 0);
-        //sem_t *full = sem_open("full", 0);
-	sigact(SIGTERM, signalHandler);
+	sigact(SIGTERM, signalHandler); // Signals incase one is invoked while here
 	sigact(SIGUSR1, signalHandler);
-	attachSM();
-	// grab item
-	// log
-	// delete item
-	sleep((rand() % (10 - 1 + 1)) + 1);
+	attachSM(); // Attach memory to this child
+	sleep((rand() % (10 - 1 + 1)) + 1); // Sleep from between 1-10 seconds
 	int i = sm->item;
-	logOutput(sm->logfile, "Time %s | Consumer removed %d\n", getFormattedTime(), i); 
+	logOutput(sm->logfile, "Time %s | Consumer removed %d\n", getFormattedTime(), i); // Log the item that was just grabbed
 	printf("Consumer consumed item: %d\n", sm->item);
-
 	sm->monitorCounter--;
-	//if (sm->monitorCounter == sm->maxPro-1) {
-		sem_post(mutex);
-		sem_post(empty);
-	//}
+	sem_post(mutex); // Free up the producers
+	sem_post(empty);
 	sm->consumerCounter--;
-	//sm->monitorCounter--;
 	return 0;
 }
 

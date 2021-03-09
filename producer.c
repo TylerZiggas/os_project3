@@ -3,30 +3,21 @@
 //void signalHandler(int);
 
 int main(int argc, char *argv[]) {
-	sem_t *mutex = sem_open("mutex", 0);
-	//sem_t *empty = sem_open("empty", 0);
+	sem_t *mutex = sem_open("mutex", 0); // Open necessary semaphores for use after creation
 	sem_t *full = sem_open("full", 0);
 	sigact(SIGTERM, signalHandler); // Set up signals 
 	sigact(SIGUSR1, signalHandler);
-	attachSM();
-	srand(time(NULL));
-	int i = (rand() % 300);
-	//printf("%s\n", logfilename);
-	//printf("%s <- should be here", sm->logfile);
-	logOutput(sm->logfile, "Time %s | Producer created item %d\n", getFormattedTime(), i);
-	// store 
-	sleep((rand() % (5 - 1 + 1)) + 1);
+	attachSM(); // Attach memory to this child
+	srand(time(NULL)); 
+	int i = (rand() % 300); // Creation of a random item
+	logOutput(sm->logfile, "Time %s | Producer created item %d\n", getFormattedTime(), i); // Log it
+	sleep((rand() % (5 - 1 + 1)) + 1); // Sleep from 1-5 seconds
 	printf("Producer produced item: %d\n", i);
 	sm->item = i;
-	//itemSize++;
-	//printf("This is the amount of items produced: %d\n", itemSize);
 	sm->monitorCounter++;
-	//if (sm->monitorCounter == 1) {
-		sem_post(mutex);
-		sem_post(full);
-	//}
+	sem_post(mutex); // Signal that the consumer is good to go now that the item is made
+	sem_post(full);
 	sm->producerCounter--;
-	//sm->monitorCounter++;
 	return 0;
 }
 

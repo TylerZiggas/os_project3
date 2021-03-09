@@ -73,7 +73,7 @@ char* getFormattedTime() { // Creation of formatted time, mostly for log file
         return formattedTime;
 }
 
-void sigact(int signum, void handler(int)) {
+void sigact(int signum, void handler(int)) { // Creation of signals for timer and ctrl c in various spots of the program
 	struct sigaction sa;
 	if (sigemptyset(&sa.sa_mask) == -1) {
 		perror("Sig set error");
@@ -81,133 +81,87 @@ void sigact(int signum, void handler(int)) {
 	}
 	sa.sa_handler = handler;
 	sa.sa_flags = 0;
-	if (sigaction(signum, &sa, NULL) == -1) {
+	if (sigaction(signum, &sa, NULL) == -1) { // Making sure sigaction is set correctly
 		perror("Sigaction error");
 		exit(EXIT_FAILURE);
 	}
 }
 
-void signalHandler(int s) {
+void signalHandler(int s) { 
 	sem_unlink("mutex");
 	sem_unlink("empty");
 	sem_unlink("full");
-	if (s == SIGTERM || s == SIGUSR1) {
+	if (sm->parentid != getpid()) {
 		printf("Child exiting...\n");
 		exit(EXIT_FAILURE);
 	}
 
 	killpg(sm->pgid, s == SIGALRM ? SIGUSR1 : SIGTERM);
 	while (wait(NULL) > 0);
-	sleep(1);
 	removeSM();
-	//sem_unlink("mutex");
-	//sem_unlink("empty");
-	//sem_unlink("full");
 	printf("Monitor exiting...\n");
 	exit(EXIT_SUCCESS);
 }
+
 //Monitor block
 
-//int monitorCounter = 0;
+bool firstForGroup = true;
 
 void produce(int producer) {
 	sigact(SIGTERM, signalHandler); // Set up signals 
 	sigact(SIGUSR1, signalHandler);
-	//printf("producer produce function%d\n", producer);
 	sem_t *mutex = sem_open("mutex", 0);
 	sem_t *empty = sem_open("empty" , 0);
-	//sem_t *full = sem_open("full" , 0);
 	//sm->monitorCounter++;
 	//if (sm->monitorCounter == sm->maxPro) {
-		//printf("Producer waiting on full\n");
-		sem_wait(empty);
-		sem_wait(mutex);
+	sem_wait(empty);
+	sem_wait(mutex);
 	//}
 	
 	char id[256];
 	sprintf(id, "%d", producer);
-	execl("./producer", id, NULL);		
-	//printf("Producer %d\n", producer);
-	//monitorCounter++;
-	//printf("%d\n", counter);
-	
-	//if (monitorCounter == 1) {
-	//	sem_post(mutex);
-	//	sem_post(full);		
-	//}
-	//sem_close(mutex);
-	//sem_close(empty);
-	//sem_close(full);
+	execl("./producer", id, NULL);
 }
 
 void consume(int consumer) {
 	sigact(SIGTERM, signalHandler); // Set up signals 
 	sigact(SIGUSR1, signalHandler);
-	//printf("consumer consume function%d\n", consumer);
         sem_t *mutex = sem_open("mutex", 0);
-        //sem_t *empty = sem_open("empty" , 1);
         sem_t *full = sem_open("full" , 0);
 	//sm->monitorCounter--;
 	//if (sm->monitorCounter == 0) {
-		//printf("Consumer waiting on empty\n");
-		sem_wait(full);
-		//printf("Consumer past full\n");
-		sem_wait(mutex);
-		//printf("Consumer past full and mutex\n");
+	sem_wait(full);
+	sem_wait(mutex);
 	//}
 
 	char id[256];
 	sprintf(id, "%d", consumer);
 	execl("./consumer", id, NULL);	
-	//printf("Consumer %d\n", consumer);
-	//monitorCounter--;
-
-	//if (monitorCounter == sm->maxPro-1) {
-	//	sem_post(mutex);
-	//	sem_post(empty);
-	//}
-	//sem_close(mutex);
-	//sem_close(empty);
-	//sem_close(full);
 }
 
 void spawnProducer(int producer, int i) {
+	sigact(SIGTERM, signalHandler); // Create signal handlers here in case of exit here
+	sigact(SIGUSR1, signalHandler);
 	pid_t pid = fork();
-	if (i == 0) {
+	if (pid == 0 && i == 0 && firstForGroup) { // Creation of group pid
+		firstForGroup = false;
 		sm->pgid = getpid();
+		setpgid(0, sm->pgid);
 	}
- 	setpgid(0, sm->pgid);
-	if (pid == 0) {
-		//while (true) {
-			//printf("Producer %d here", i);
-			produce(producer);
-			exit(EXIT_SUCCESS);
-		//}
-		//char id[256];
-		//sprintf(id, "%d", producer);
-		//printf("producer %d\n", producer);
-		//execl("./producer", id, NULL);
-		//exit(EXIT_SUCCESS);
+ 	//setpgid(0, sm->pgid);
+	if (pid == 0) { // Make sure this is a child process
+		produce(producer);
+		exit(EXIT_SUCCESS);
 	}
 }
 
 void spawnConsumer(int consumer, int i) {
+	sigact(SIGTERM, signalHandler); // Create signal handlers here in case of exit
+	sigact(SIGUSR1, signalHandler);
 	pid_t pid = fork();
-	//if (i == 0) {
-	//	sm->pgid = getpid();
-	//}
-	//setpgid(0, sm->pgid);
-	if (pid == 0) {
-		//while (true) {
-			//printf("Consumer %d here", i);
-			consume(consumer);
-			exit(EXIT_SUCCESS);
-		//}
-		//char id[256];
-		//sprintf(id, "%d", consumer);
-		//printf("consumer %d\n", consumer);
-		//execl("./consumer", id, NULL);	
-		//exit(EXIT_SUCCESS);
+	if (pid == 0) { // Make sure this is a child process
+		consume(consumer);
+		exit(EXIT_SUCCESS);
 	}
 }
 //End of Monitor block

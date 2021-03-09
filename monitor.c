@@ -2,10 +2,8 @@
 
 void setupTimer(int);
 void spawnChild(int, int);
-//void signalHandler(int);
+//void monitorHandler(int);
 void helpMenu();
-
-//bool flag = false;
 
 int main (int argc, char *argv[]) {
 	int character, optargCount, maxProducers = 2, maxConsumers = 6,  timeSec = 5; // Intiailize necessary variables
@@ -13,15 +11,14 @@ int main (int argc, char *argv[]) {
 	bool allDigit = true, fileCreated = false;
 	//signal(SIGINT, signalHandler);
 	sigact(SIGINT, signalHandler);
-
 	while ((character = getopt(argc, argv, "o:p:c:t:h")) != -1) { // Set up command line parsing
 		switch (character) { 
-			case 'o': // Change the maxChildren at a time
+			case 'o': // Creation of a logfile defined by user
 				logfile = optarg;
 				createFile(logfile);
 				fileCreated = true;
                                 continue;
-			case 'p': // Change the maxChildren at a time
+			case 'p': // Change the max producers allowed
 				allDigit = true;
 				for (optargCount = 0; optargCount < strlen(optarg); optargCount++) { // Check if entire optarg is digit
 					if (!isdigit(optarg[optargCount])) {
@@ -38,7 +35,7 @@ int main (int argc, char *argv[]) {
 					return EXIT_FAILURE;
 				}
 				continue;
-			 case 'c': // Change the maxChildren at a time
+			 case 'c': // Change the max consumers allowed
                                 allDigit = true;
                                 for (optargCount = 0; optargCount < strlen(optarg); optargCount++) { // Check if entire optarg is digit
                                         if (!isdigit(optarg[optargCount])) {
@@ -77,43 +74,39 @@ int main (int argc, char *argv[]) {
 			case 'h': // Show a help menu if confused
 				helpMenu();
 				continue;
-			default: 
+			default: // Simply show help menu and exit if user inputs something that isnt allowed
 				printf("Input not valid\n");
 				helpMenu();
 				return EXIT_FAILURE;
 		}
 	}
 	
-	if (!fileCreated) {
+	if (!fileCreated) { // If file was not specified, make a default one
 		logfile = "logfile";
 		createFile(logfile);
 	}
 
 	allocateSM(); // Allocate memory for the whole program
-	//semAllocate(true);
 	setupTimer(timeSec); // Set up the timer
-	
-	if (maxProducers >= maxConsumers) {
+	sm->parentid = getpid();	
+
+	if (maxProducers >= maxConsumers) { // Make sure that consumers is more than producers
 		maxConsumers = maxProducers + 1;
 	}
 	int maxAll = maxProducers + maxConsumers;
 
-	if (maxAll > 20) {
+	if (maxAll > 20) { // If the max of all is 20, just make it default and loop with these numbers
 		maxProducers = 2;
 		maxConsumers = 6;
 		maxAll = maxProducers + maxConsumers;
 	}
 	
-	//printf("%s\n", sm->logfile);
-	//char* newlogfile[10];
-	strcpy(sm->logfile, logfile);
-	printf("%s <- here goes\n", sm->logfile);
+	strcpy(sm->logfile, logfile); // Copy filename to memory so we can write to this new logfile
 	
-	sm->maxPro = maxProducers;
+	sm->maxPro = maxProducers; // Setting shared memory variables that are necessary for other parts 
 	sm->maxCon = maxConsumers;
 	sm->total = maxAll;
-
-	sm->producerCounter = 0;
+	sm->producerCounter = 0; // Initialize those variables before we start
 	sm->consumerCounter = 0;
 	sm->monitorCounter = 0;
 	int i = 0;
@@ -121,57 +114,36 @@ int main (int argc, char *argv[]) {
 	sem_t *empty = sem_open("empty", O_CREAT, 0600, 1);
 	sem_t *full = sem_open("full", O_CREAT, 0600, 0);
 	
-	sem_close(mutex);
+	sem_close(mutex); // Close them immediately as we won't use them in the main function
 	sem_close(empty);
 	sem_close(full);
 	while (true) { // Go through until we are passed the number of items
-		if (sm->producerCounter < maxProducers) { // Spawn children based on max allowed
-			//printf("Spawning producer...%d\n", sm->producerCounter);
+		if (sm->producerCounter < maxProducers) { // Creation of producers
 			spawnProducer(sm->producerCounter++, i);
 			i++;
-		} //else { // Else wait for children to finish and keep making more
-		//	while(wait(NULL) > 0);
-		//	producerCounter = 0;
-		//}
-
-		if (sm->consumerCounter < maxConsumers) {
-			//printf("Spawning consumer...%d\n", sm->consumerCounter);
+		} 
+		if (sm->consumerCounter < maxConsumers) { // Creation of consumers
 			spawnConsumer(sm->consumerCounter++, i);
 			i++;
-		} else {
-		//	while(wait(NULL) > 0);
-		//	consumerCounter = 0;
-		//}
-		//if (sm->producerCounter + sm->consumerCounter == maxAll) {
-			//printf("Waiting\n");
+		} 
+		if (!(sm->consumerCounter < maxConsumers) && !(sm->producerCounter < maxProducers)) { // Wait for a consumer or producer to end, will check itself to see which to make 
 			wait(NULL);
-			//printf("Done waiting\n");
 		}
 	}
-	while(wait(NULL) > 0); // Wait for all to end before going to next depth
-//	childCounter = 0;
+	while(wait(NULL) > 0); // Wait for all to end
 
 	removeSM(); // Removing the shared memory once children are done
-	sem_unlink("full");
+	sem_unlink("full"); // Unlink our named semaphores in case something weird happens and we leave the infinite loop
 	sem_unlink("empty");
 	sem_unlink("mutex");
 	
-	//semRelease();
 	return EXIT_SUCCESS;
 }
 
 void setupTimer(const int t) { // Creation of the timer
-	sigact(SIGALRM, signalHandler);
-	//struct sigaction action;
-	//memset(&action, 0, sizeof(action));
-	//action.sa_handler = signalHandler;
+	sigact(SIGALRM, signalHandler); 
 
-	//if (sigaction(SIGALRM, &action, NULL) != 0) { // In case of failed signal creation
-	//	perror("Failed to set signal action for timer");
-	//	exit(EXIT_FAILURE);	
-	//}
-
-	struct itimerval timer;
+	struct itimerval timer; // Creation of the struct for timer
 	timer.it_value.tv_sec = t;
 	timer.it_value.tv_usec = t;
 	timer.it_interval.tv_sec = 0;
@@ -183,15 +155,19 @@ void setupTimer(const int t) { // Creation of the timer
 	}
 }
 
-//void signalHandler(int s) { // Signal handler for master
+//void monitorHandler(int s) { // Signal handler for master
 //	killpg(sm->pgid, s == SIGALRM ? SIGUSR1 : SIGTERM);
-//
-//	while (wait(NULL) > 0); // Wait for all child processes to finish
-//
-//	printf("Monitor exiting...\n");	
+
 //	sem_unlink("mutex");
-//	sem_unlink("empty");
-//	sem_unlink("full");
+  //      sem_unlink("empty");
+    //    sem_unlink("full");
+
+//	while (wait(NULL) > 0); // Wait for all child processes to finish
+
+//	printf("Monitor exiting...\n");	
+	//sem_unlink("mutex");
+	//sem_unlink("empty");
+	//sem_unlink("full");
 //	removeSM(); // Deallocate and destroy shared memory
 //	exit(EXIT_SUCCESS);
 //}

@@ -1,0 +1,48 @@
+AUTHOR: Tyler Ziggas
+Date: March 2021
+
+This project is invoked by the following command:
+
+./monitor [-h] [-o logfile] [-p m] [-c n] [-t time]
+
+-h | Describe how the project runs and then, terminate.
+-o logfile | Name of the file to save logs; default: logfile
+-p m Number | of producers; default: m = 2
+-c n Number | of consumers; default: n = 6
+-t time | The time in seconds after which the process will terminate, even if it has not finished. (Default: 100)
+
+This program is a test using semaphores for the producer consumer problem, while also implementing a monitor.
+
+The monitor's purpose is to not let the producers produce over the maximum and the consumers consume while empty.
+
+The monitor is also checking to make sure that multiple producers are not producing the same thing, while also looking to make sure
+multiple consumers are not consuming the same thing.
+
+Please compile this project using the word "make" to run the file using the above commands.
+
+
+
+Our suggested implementation steps for this project:
+
+1. Get a Makefile that compiles the two source files.
+
+2. Have your main executable read in the command line arguments and output the values to your screen (and ensure -h
+displays useful results).
+
+3. Design the producer and consumer executables.
+
+4. Have monitor allocate shared memory, use it, then deallocate it. Make sure to check all possible error returns.
+
+5. Design the monitor functions as a separate source/object. Move the object file into a static library using ar command.
+Modify Makefile to access the functions in the library.
+
+6. Get monitor to fork and exec producers and consumers. Have the children output any information passed from
+monitor and then the value of the clock to test for correct launch. monitor should wait for children to terminate and
+then output the value of the clock at that time.
+
+7. Put in the signal handling to terminate after specified number of seconds. A good idea to test this is to simply have
+the child go into an infinite loop so monitor will not ever terminate normally. Once this is working have it catch
+Ctrl-c and free up the shared memory, send a kill signal to the child and then terminate itself.
+
+8. Set up the code to fork multiple child processes until the specific limits.
+
