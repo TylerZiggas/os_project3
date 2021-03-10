@@ -16,6 +16,7 @@ int main (int argc, char *argv[]) {
 	bool allDigit = true, fileCreated = false;
 	//signal(SIGINT, signalHandler);
 	sigact(SIGINT, signalHandler);
+
 	while ((character = getopt(argc, argv, "o:p:c:t:h")) != -1) { // Set up command line parsing
 		switch (character) { 
 			case 'o': // Creation of a logfile defined by user
@@ -93,7 +94,6 @@ int main (int argc, char *argv[]) {
 
 	allocateSM(); // Allocate memory for the whole program
 	logOutput(logfile, "Time:%s | Allocated Shared Memory\n", getFormattedTime());
-	//setupTimer(timeSec); // Set up the timer
 	sm->parentid = getpid();	
 
 	if (maxProducers >= maxConsumers) { // Make sure that consumers is more than producers
@@ -117,7 +117,9 @@ int main (int argc, char *argv[]) {
 	sm->monitorCounter = 0;
 	int i = 0;
 
-	setupTimer(timeSec);
+	setupTimer(timeSec); // Setting up the timer
+	//signal(SIGALRM, signalHandler);
+	//alarm(timeSec);
 	sem_t *mutex = sem_open("mutex", O_CREAT, 0600, 1);
 	sem_t *empty = sem_open("empty", O_CREAT, 0600, 1);
 	sem_t *full = sem_open("full", O_CREAT, 0600, 0);

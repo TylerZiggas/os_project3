@@ -93,6 +93,12 @@ void signalHandler(int s) {
 		exit(EXIT_FAILURE);
 	}
 
+	if (sm->parentid == getpid() && (s == SIGALRM || s == SIGUSR1)) {
+		printf("Alarm triggered, please wait while children end...\n");
+		sigact(SIGINT, signalHandler);
+		raise(SIGINT);
+	}	
+
         sem_unlink("mutex");
         sem_unlink("empty");
         sem_unlink("full");
@@ -111,8 +117,8 @@ void signalHandler(int s) {
 bool firstForGroup = true;
 
 void produce(int producer) {
-	//sigact(SIGTERM, signalHandler); // Set up signals 
 	sigact(SIGUSR1, signalHandler);
+	alarm(10);
 	sem_t *mutex = sem_open("mutex", 0);
 	sem_t *empty = sem_open("empty" , 0);
 	//sm->monitorCounter++;
@@ -127,15 +133,14 @@ void produce(int producer) {
 }
 
 void consume(int consumer) {
-	//sigact(SIGTERM, signalHandler); // Set up signals 
 	sigact(SIGUSR1, signalHandler);
+ 	alarm(10);
         sem_t *mutex = sem_open("mutex", 0);
         sem_t *full = sem_open("full" , 0);
 	//sm->monitorCounter--;
 	//if (sm->monitorCounter == 0) {
 	sem_wait(full);
 	sem_wait(mutex);
-	//}
 
 	char id[256];
 	sprintf(id, "%d", consumer);
@@ -143,8 +148,6 @@ void consume(int consumer) {
 }
 
 void spawnProducer(int producer, int i) {
-	//sigact(SIGTERM, signalHandler); // Create signal handlers here in case of exit here
-	//sigact(SIGUSR1, signalHandler);
 	pid_t pid = fork();
 	if (pid == 0 && i == 0 && firstForGroup) { // Creation of group pid
 		firstForGroup = false;
@@ -159,8 +162,6 @@ void spawnProducer(int producer, int i) {
 }
 
 void spawnConsumer(int consumer, int i) {
-	//sigact(SIGTERM, signalHandler); // Create signal handlers here in case of exit
-	//sigact(SIGUSR1, signalHandler);
 	pid_t pid = fork();
 	if (pid == 0) { // Make sure this is a child process
 		consume(consumer);
