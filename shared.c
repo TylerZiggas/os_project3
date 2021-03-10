@@ -87,27 +87,27 @@ void sigact(int signum, void handler(int)) { // Creation of signals for timer an
 	}
 }
 
+bool alarmTrigger = false;
+
 void signalHandler(int s) { 
-	if (sm->parentid != getpid()){
+	if (sm->parentid != getpid()){ // Check if you are not the parent, kill children
 		printf("Child exiting...\n");
 		exit(EXIT_FAILURE);
 	}
 
-	if (sm->parentid == getpid() && (s == SIGALRM || s == SIGUSR1)) {
+	if (sm->parentid == getpid() && (s == SIGALRM || s == SIGUSR1)) { // Print if specifically time ran out
 		printf("Alarm triggered, please wait while children end...\n");
-		sigact(SIGINT, signalHandler);
-		raise(SIGINT);
 	}	
 
-        sem_unlink("mutex");
+        sem_unlink("mutex"); // Unlink the semaphores that were used
         sem_unlink("empty");
         sem_unlink("full");
 	
-	logOutput(sm->logfile, "Time:%s | Signal to end process has been caught\n", getFormattedTime());
-	killpg(sm->pgid, s == SIGALRM ? SIGUSR1 : SIGTERM);
-	while (wait(NULL) > 0);
+	logOutput(sm->logfile, "Time:%s | Signal to end process has been caught\n", getFormattedTime()); // Log that the process is ending
+	killpg(sm->pgid, s == SIGALRM ? SIGUSR1 : SIGINT); 
+	while (wait(NULL) > 0); // Wait for children in case some are still waiting to die
         logOutput(sm->logfile, "Time:%s | Deallocated Shared Memory\n", getFormattedTime());
-	removeSM();
+	removeSM(); // Remove shared memory
 	printf("Monitor exiting...\n");
 	exit(EXIT_SUCCESS);
 }
@@ -116,46 +116,37 @@ void signalHandler(int s) {
 
 bool firstForGroup = true;
 
-void produce(int producer) {
-	sigact(SIGUSR1, signalHandler);
-	alarm(10);
-	sem_t *mutex = sem_open("mutex", 0);
+void produce(int producer) { // Monitor portion for multiple producers
+	sem_t *mutex = sem_open("mutex", 0); // Opening semaphores
 	sem_t *empty = sem_open("empty" , 0);
-	//sm->monitorCounter++;
-	//if (sm->monitorCounter == sm->maxPro) {
-	sem_wait(empty);
+	sem_wait(empty); // Wait on these calls
 	sem_wait(mutex);
-	//}
 	
-	char id[256];
+	char id[256]; // Cast producer to char to pass it
 	sprintf(id, "%d", producer);
-	execl("./producer", id, NULL);
+	execl("./producer", id, NULL); // Rest of monitor in producer.c as execl never returns here
 }
 
-void consume(int consumer) {
-	sigact(SIGUSR1, signalHandler);
- 	alarm(10);
-        sem_t *mutex = sem_open("mutex", 0);
+void consume(int consumer) { // Monitor protion for multiple consumers
+        sem_t *mutex = sem_open("mutex", 0); // Opening semaphores
         sem_t *full = sem_open("full" , 0);
-	//sm->monitorCounter--;
-	//if (sm->monitorCounter == 0) {
-	sem_wait(full);
+	sem_wait(full); 
 	sem_wait(mutex);
 
-	char id[256];
+	char id[256]; // Cast consumer to char to pass it
 	sprintf(id, "%d", consumer);
-	execl("./consumer", id, NULL);	
+	execl("./consumer", id, NULL); // Rest of monitor in consumer.c as execl never returns here	
 }
 
 void spawnProducer(int producer, int i) {
 	pid_t pid = fork();
-	if (pid == 0 && i == 0 && firstForGroup) { // Creation of group pid
+	if (pid == 0 && i == 0 && firstForGroup == true) { // Creation of group pid
 		firstForGroup = false;
 		sm->pgid = getpid();
-		setpgid(0, sm->pgid);
 	}
- 	//setpgid(0, sm->pgid);
+	setpgid(pid, sm->pgid);
 	if (pid == 0) { // Make sure this is a child process
+		sigact(SIGUSR1, signalHandler);
 		produce(producer);
 		exit(EXIT_SUCCESS);
 	}
@@ -163,7 +154,12 @@ void spawnProducer(int producer, int i) {
 
 void spawnConsumer(int consumer, int i) {
 	pid_t pid = fork();
+	while (pid == 0 && !firstForGroup) {
+		sleep(0);
+	}
+	setpgid(pid, sm->pgid);
 	if (pid == 0) { // Make sure this is a child process
+		sigact(SIGUSR1, signalHandler);
 		consume(consumer);
 		exit(EXIT_SUCCESS);
 	}

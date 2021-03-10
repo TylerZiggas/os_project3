@@ -4,13 +4,9 @@
 
 #include "monitor.h"
 
-//void signalHandler(int);
-
 int main(int argc, char *argv[]) {
 	sem_t *mutex = sem_open("mutex", 0); // Open necessary semaphores for use after creation
 	sem_t *full = sem_open("full", 0);
-	//sigact(SIGTERM, signalHandler); // Set up signals 
-	//sigact(SIGUSR1, signalHandler);
 	attachSM(); // Attach memory to this child
 	srand(time(NULL)); 
 	int i = (rand() % 300); // Creation of a random item
@@ -24,10 +20,3 @@ int main(int argc, char *argv[]) {
 	sm->producerCounter--;
 	return 0;
 }
-
-//void signalHandler(int s) { // Catches signal for ^C or Timeout
-//	if (s == SIGTERM || s == SIGUSR1) {
-//		printf("Producer exiting... 1\n");
-//		exit(EXIT_FAILURE);
-//	}
-//}

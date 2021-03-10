@@ -22,7 +22,7 @@
 #include <semaphore.h>
 #include <fcntl.h>
 
-#define FORMATTED_TIME_SIZE 50 
+#define FORMATTED_TIME_SIZE 50 // Time declarations
 #define FORMATTED_TIME_FORMAT "%H:%M:%S"
 
 struct SharedMemory {
@@ -38,14 +38,14 @@ struct SharedMemory {
 	pid_t pgid; // group pid
 };
 
-char* logfilename;
+char* logfilename; // Passing of the file we will write to
 
-int smKey;
+int smKey; // Shared memory and semaphore declarations
 int smID;
 struct SharedMemory* sm;
 sem_t mutex, empty, full;
 
-void produce(int);
+void produce(int); // Declare functions used in shared
 void consume(int);
 void spawnProducer(int, int);
 void spawnConsumer(int, int);

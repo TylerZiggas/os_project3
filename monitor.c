@@ -7,14 +7,12 @@
 
 void setupTimer(int);
 void spawnChild(int, int);
-//void monitorHandler(int);
 void helpMenu();
 
 int main (int argc, char *argv[]) {
-	int character, optargCount, maxProducers = 2, maxConsumers = 6,  timeSec = 5; // Intiailize necessary variables
+	int character, optargCount, maxProducers = 2, maxConsumers = 6,  timeSec = 100; // Intiailize necessary variables
 	char* logfile;
 	bool allDigit = true, fileCreated = false;
-	//signal(SIGINT, signalHandler);
 	sigact(SIGINT, signalHandler);
 
 	while ((character = getopt(argc, argv, "o:p:c:t:h")) != -1) { // Set up command line parsing
@@ -95,7 +93,6 @@ int main (int argc, char *argv[]) {
 	allocateSM(); // Allocate memory for the whole program
 	logOutput(logfile, "Time:%s | Allocated Shared Memory\n", getFormattedTime());
 	sm->parentid = getpid();	
-
 	if (maxProducers >= maxConsumers) { // Make sure that consumers is more than producers
 		maxConsumers = maxProducers + 1;
 	}
@@ -115,11 +112,12 @@ int main (int argc, char *argv[]) {
 	sm->producerCounter = 0; // Initialize those variables before we start
 	sm->consumerCounter = 0;
 	sm->monitorCounter = 0;
+
 	int i = 0;
 
 	setupTimer(timeSec); // Setting up the timer
-	//signal(SIGALRM, signalHandler);
-	//alarm(timeSec);
+	
+	logOutput(logfile, "Time:%s | Alarm set to end in %d seconds \n", getFormattedTime(), timeSec);
 	sem_t *mutex = sem_open("mutex", O_CREAT, 0600, 1);
 	sem_t *empty = sem_open("empty", O_CREAT, 0600, 1);
 	sem_t *full = sem_open("full", O_CREAT, 0600, 0);
@@ -127,6 +125,7 @@ int main (int argc, char *argv[]) {
 	sem_close(mutex); // Close them immediately as we won't use them in the main function
 	sem_close(empty);
 	sem_close(full);
+	
 	while (true) { // Go through until we are passed the number of items
 		if (sm->producerCounter < maxProducers) { // Creation of producers
 			spawnProducer(sm->producerCounter++, i);
@@ -140,6 +139,7 @@ int main (int argc, char *argv[]) {
 			wait(NULL);
 		}
 	}
+	
 	while(wait(NULL) > 0); // Wait for all to end
 
 	removeSM(); // Removing the shared memory once children are done
@@ -153,6 +153,7 @@ int main (int argc, char *argv[]) {
 
 void setupTimer(const int t) { // Creation of the timer
 	sigact(SIGALRM, signalHandler); 
+	sigact(SIGUSR1, signalHandler);
 
 	struct itimerval timer; // Creation of the struct for timer
 	timer.it_value.tv_sec = t;
@@ -165,23 +166,6 @@ void setupTimer(const int t) { // Creation of the timer
 		exit(EXIT_FAILURE);
 	}
 }
-
-//void monitorHandler(int s) { // Signal handler for master
-//	killpg(sm->pgid, s == SIGALRM ? SIGUSR1 : SIGTERM);
-
-//	sem_unlink("mutex");
-  //      sem_unlink("empty");
-    //    sem_unlink("full");
-
-//	while (wait(NULL) > 0); // Wait for all child processes to finish
-
-//	printf("Monitor exiting...\n");	
-	//sem_unlink("mutex");
-	//sem_unlink("empty");
-	//sem_unlink("full");
-//	removeSM(); // Deallocate and destroy shared memory
-//	exit(EXIT_SUCCESS);
-//}
 
 void helpMenu() { // Help menu
 	printf("This program taks a number of producers and consumers and ends at whatever the user wishes by setting the time.\n");
