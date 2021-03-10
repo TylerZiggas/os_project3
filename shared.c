@@ -88,16 +88,19 @@ void sigact(int signum, void handler(int)) { // Creation of signals for timer an
 }
 
 void signalHandler(int s) { 
-	sem_unlink("mutex");
-	sem_unlink("empty");
-	sem_unlink("full");
-	if (sm->parentid != getpid()) {
+	if (sm->parentid != getpid()){
 		printf("Child exiting...\n");
 		exit(EXIT_FAILURE);
 	}
 
+        sem_unlink("mutex");
+        sem_unlink("empty");
+        sem_unlink("full");
+	
+	logOutput(sm->logfile, "Time:%s | Signal to end process has been caught\n", getFormattedTime());
 	killpg(sm->pgid, s == SIGALRM ? SIGUSR1 : SIGTERM);
 	while (wait(NULL) > 0);
+        logOutput(sm->logfile, "Time:%s | Deallocated Shared Memory\n", getFormattedTime());
 	removeSM();
 	printf("Monitor exiting...\n");
 	exit(EXIT_SUCCESS);
@@ -108,7 +111,7 @@ void signalHandler(int s) {
 bool firstForGroup = true;
 
 void produce(int producer) {
-	sigact(SIGTERM, signalHandler); // Set up signals 
+	//sigact(SIGTERM, signalHandler); // Set up signals 
 	sigact(SIGUSR1, signalHandler);
 	sem_t *mutex = sem_open("mutex", 0);
 	sem_t *empty = sem_open("empty" , 0);
@@ -124,7 +127,7 @@ void produce(int producer) {
 }
 
 void consume(int consumer) {
-	sigact(SIGTERM, signalHandler); // Set up signals 
+	//sigact(SIGTERM, signalHandler); // Set up signals 
 	sigact(SIGUSR1, signalHandler);
         sem_t *mutex = sem_open("mutex", 0);
         sem_t *full = sem_open("full" , 0);
@@ -140,8 +143,8 @@ void consume(int consumer) {
 }
 
 void spawnProducer(int producer, int i) {
-	sigact(SIGTERM, signalHandler); // Create signal handlers here in case of exit here
-	sigact(SIGUSR1, signalHandler);
+	//sigact(SIGTERM, signalHandler); // Create signal handlers here in case of exit here
+	//sigact(SIGUSR1, signalHandler);
 	pid_t pid = fork();
 	if (pid == 0 && i == 0 && firstForGroup) { // Creation of group pid
 		firstForGroup = false;
@@ -156,8 +159,8 @@ void spawnProducer(int producer, int i) {
 }
 
 void spawnConsumer(int consumer, int i) {
-	sigact(SIGTERM, signalHandler); // Create signal handlers here in case of exit
-	sigact(SIGUSR1, signalHandler);
+	//sigact(SIGTERM, signalHandler); // Create signal handlers here in case of exit
+	//sigact(SIGUSR1, signalHandler);
 	pid_t pid = fork();
 	if (pid == 0) { // Make sure this is a child process
 		consume(consumer);

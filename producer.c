@@ -1,3 +1,7 @@
+// Author: Tyler Ziggas
+// Date: March 2021
+// Producer produces an item once the semaphores tell it that it is good to go, and opens it for consumers
+
 #include "monitor.h"
 
 //void signalHandler(int);
@@ -5,7 +9,7 @@
 int main(int argc, char *argv[]) {
 	sem_t *mutex = sem_open("mutex", 0); // Open necessary semaphores for use after creation
 	sem_t *full = sem_open("full", 0);
-	sigact(SIGTERM, signalHandler); // Set up signals 
+	//sigact(SIGTERM, signalHandler); // Set up signals 
 	sigact(SIGUSR1, signalHandler);
 	attachSM(); // Attach memory to this child
 	srand(time(NULL)); 

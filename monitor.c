@@ -1,3 +1,8 @@
+// Author: Tyler Ziggas
+// Date: March 2021
+// This takes in the options from command line and applies/verifies the contents given, and then allocates shared memory.
+// We then enter an infinite loop for creation of producers and consumers
+
 #include "monitor.h"
 
 void setupTimer(int);
@@ -87,7 +92,8 @@ int main (int argc, char *argv[]) {
 	}
 
 	allocateSM(); // Allocate memory for the whole program
-	setupTimer(timeSec); // Set up the timer
+	logOutput(logfile, "Time:%s | Allocated Shared Memory\n", getFormattedTime());
+	//setupTimer(timeSec); // Set up the timer
 	sm->parentid = getpid();	
 
 	if (maxProducers >= maxConsumers) { // Make sure that consumers is more than producers
@@ -110,6 +116,8 @@ int main (int argc, char *argv[]) {
 	sm->consumerCounter = 0;
 	sm->monitorCounter = 0;
 	int i = 0;
+
+	setupTimer(timeSec);
 	sem_t *mutex = sem_open("mutex", O_CREAT, 0600, 1);
 	sem_t *empty = sem_open("empty", O_CREAT, 0600, 1);
 	sem_t *full = sem_open("full", O_CREAT, 0600, 0);
@@ -133,6 +141,7 @@ int main (int argc, char *argv[]) {
 	while(wait(NULL) > 0); // Wait for all to end
 
 	removeSM(); // Removing the shared memory once children are done
+	logOutput(logfile, "Time:%s | Deallocated Shared Memory\n", getFormattedTime());
 	sem_unlink("full"); // Unlink our named semaphores in case something weird happens and we leave the infinite loop
 	sem_unlink("empty");
 	sem_unlink("mutex");
@@ -145,11 +154,11 @@ void setupTimer(const int t) { // Creation of the timer
 
 	struct itimerval timer; // Creation of the struct for timer
 	timer.it_value.tv_sec = t;
-	timer.it_value.tv_usec = t;
+	timer.it_value.tv_usec = 0;
 	timer.it_interval.tv_sec = 0;
 	timer.it_interval.tv_usec = 0;
 	
-	if (setitimer(ITIMER_REAL, &timer, NULL) != 0) { // In case of failed creation of the timer itself
+	if (setitimer(ITIMER_REAL, &timer, NULL) == -1) { // In case of failed creation of the timer itself
 		perror("Failed to set timer");
 		exit(EXIT_FAILURE);
 	}
