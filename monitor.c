@@ -4,6 +4,7 @@
 // We then enter an infinite loop for creation of producers and consumers
 
 #include "monitor.h"
+#include "monlib.h"
 
 void setupTimer(int);
 void spawnChild(int, int);

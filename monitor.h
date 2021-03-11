@@ -45,11 +45,7 @@ int smID;
 struct SharedMemory* sm;
 sem_t mutex, empty, full;
 
-void produce(int); // Declare functions used in shared
-void consume(int);
-void spawnProducer(int, int);
-void spawnConsumer(int, int);
-void createFile(char*);
+void createFile(char*); // Functions declarations for shared.c
 void logOutput(char*, char*, ...);
 void allocateSM();
 void attachSM();

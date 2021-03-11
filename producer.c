@@ -3,6 +3,7 @@
 // Producer produces an item once the semaphores tell it that it is good to go, and opens it for consumers
 
 #include "monitor.h"
+#include "monlib.h"
 
 int main(int argc, char *argv[]) {
 	sem_t *mutex = sem_open("mutex", 0); // Open necessary semaphores for use after creation
@@ -12,6 +13,7 @@ int main(int argc, char *argv[]) {
 	int i = (rand() % 300); // Creation of a random item
         logOutput(sm->logfile, "Time %s | Producer created item %d\n", getFormattedTime(), i); // Log it
         printf("Producer produced item: %d\n", i);
+	printf("Producer now waiting for 1-5 seconds...\n");
 	sleep((rand() % (5 - 1 + 1)) + 1); // Sleep from 1-5 seconds
 	sm->item = i;
 	sm->monitorCounter++;

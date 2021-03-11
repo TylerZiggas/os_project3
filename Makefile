@@ -10,8 +10,8 @@ PRODUCER = producer
 CON_DEP = consumer.c
 CON_OBJ = $(CON_DEP:.c=.o)
 CONSUMER = consumer
-HEADER = monitor.h
-OBJ = shared.o
+HEADER = monitor.h monlib.h
+OBJ = shared.o monlib.o
 
 OUTPUT = $(MONITOR) $(PRODUCER) $(CONSUMER)
 all: $(OUTPUT)
