@@ -87,8 +87,6 @@ void sigact(int signum, void handler(int)) { // Creation of signals for timer an
 	}
 }
 
-bool alarmTrigger = false;
-
 void signalHandler(int s) { 
 	if (sm->parentid != getpid()){ // Check if you are not the parent, kill children
 		printf("Child exiting...\n");
