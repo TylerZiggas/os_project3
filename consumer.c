@@ -18,6 +18,5 @@ int main (int argc, char *argv[]) {
 	sm->monitorCounter--;
 	sem_post(mutex); // Free up the producers
 	sem_post(empty);
-	sm->consumerCounter--;
 	return 0;
 }

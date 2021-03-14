@@ -114,8 +114,6 @@ int main (int argc, char *argv[]) {
 	sm->consumerCounter = 0;
 	sm->monitorCounter = 0;
 
-	int i = 0;
-
 	setupTimer(timeSec); // Setting up the timer
 	
 	logOutput(logfile, "Time:%s | Alarm set to end in %d seconds \n", getFormattedTime(), timeSec);
@@ -126,29 +124,38 @@ int main (int argc, char *argv[]) {
 	sem_close(mutex); // Close them immediately as we won't use them in the main function
 	sem_close(empty);
 	sem_close(full);
-	
+	int allProducers = 0;
+	int allConsumers = 0;
 	while (true) { // Go through until we are passed the number of items
-		if (sm->producerCounter < maxProducers) { // Creation of producers
-			spawnProducer(sm->producerCounter++, i);
-			i++;
+		if (sm->producerCounter < maxProducers && allProducers != maxConsumers) { // Creation of producers
+			printf("Spawning producer...\n");
+			spawnProducer(sm->producerCounter++, allProducers);
+			allProducers++;
 		} 
-		if (sm->consumerCounter < maxConsumers) { // Creation of consumers
-			spawnConsumer(sm->consumerCounter++, i);
-			i++;
+		if (sm->consumerCounter < maxConsumers && allConsumers != maxConsumers) { // Creation of consumers
+			printf("Spawning consumer...\n");
+			spawnConsumer(sm->consumerCounter++, allConsumers);
+			allConsumers++;
 		} 
 		if (!(sm->consumerCounter < maxConsumers) && !(sm->producerCounter < maxProducers)) { // Wait for a consumer or producer to end, will check itself to see which to make 
 			wait(NULL);
+			if (allProducers == maxConsumers) {
+				break;
+			}
 		}
+		//printf("!(sm->consumerCounter (%d) < maxConsumers (%d)) && !(sm->producerCounter (%d) < maxProducers (%d)) \n", sm->consumerCounter, maxConsumers, sm->producerCounter, maxProducers);
+		// Above is a useful debugging line
 	}
 	
 	while(wait(NULL) > 0); // Wait for all to end
 
-	removeSM(); // Removing the shared memory once children are done
-	logOutput(logfile, "Time:%s | Deallocated Shared Memory\n", getFormattedTime());
 	sem_unlink("full"); // Unlink our named semaphores in case something weird happens and we leave the infinite loop
-	sem_unlink("empty");
-	sem_unlink("mutex");
-	
+        sem_unlink("empty");
+        sem_unlink("mutex");
+	removeSM(); // Removing the shared memory once children are done
+
+	logOutput(logfile, "Time:%s | Deallocated Shared Memory\n", getFormattedTime());
+
 	return EXIT_SUCCESS;
 }
 

@@ -30,5 +30,5 @@ $(CONSUMER): $(CON_OBJ) $(OBJ)
 
 .PHONY: clean
 clean:
-	/bin/rm -f $(OUTPUT) *.o  *_log
+	/bin/rm -f $(OUTPUT) *.o  *_log logfile
 
